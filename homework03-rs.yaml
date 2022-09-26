@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: jalasoft-rs
+  labels:
+    env: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      company: jalasoft
+  template:
+    metadata:
+      name: jenkins
+      labels:
+        company: jalasoft
+    spec:
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins:jdk11
+        ports:
+        - containerPort: 8080
