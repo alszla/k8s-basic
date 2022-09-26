@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jalasoft-deploy
+  labels:
+    env: dev
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      company: jalasoft
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      name: store-products
+      labels:
+        company: jalasoft
+    spec:
+      containers:
+      - name: store-products
+        image: calebespinoza/store-products:1.0
+        ports:
+        - containerPort: 80
