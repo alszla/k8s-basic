@@ -19,6 +19,6 @@ spec:
     spec:
       containers:
       - name: store-products
-        image: calebespinoza/store-products:3.0
+        image: calebespinoza/store-products:1.0
         ports:
         - containerPort: 80
