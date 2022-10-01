@@ -73,39 +73,52 @@ exports.getUsersUserId = function (request, response) {
 }
 
 exports.postUsers = function (request, response) {
-  const db = getDbConnection()
   let body = ''
 
   request.on('data', chunk => {
-    body += chunk
-  })
-  request.on('end', () => new Promise((resolve, reject) => {
-    try {
-      resolve(JSON.parse(body))
-    } catch (error) {
-      reject(error)
-    }
-  })
-    .then(postBody => db.promise().query(`INSERT INTO \`users\` (\`${Object.keys(postBody).join('`, `')}\`) VALUES ('${Object.values(postBody).join("', '")}')`))
-    .then( ([rows]) => Promise.resolve(rows.insertId))
-    .then( id => db.promise().query(`SELECT * FROM \`users\` WHERE \`id\` = ${id}`))
-    .then( ([rows]) => {
-      db.end()
-      const prettyResponse = JSON.stringify(rows[0], undefined, 2).concat(NEW_LINE)
-      response.statusCode = 201
-      response.setHeader('Content-Type', 'application/json')
-      response.end(prettyResponse)
+      body += chunk
     })
+  request.on('end', () => new Promise((resolve, reject) => {
+      try {
+        resolve(JSON.parse(body))
+      } catch (error) {
+        reject(error)
+      }
+    })
+    .then(postBody => getDbConnection().promise().query(`INSERT INTO \`users\` (\`${Object.keys(postBody).join('`, `')}\`) VALUES ('${Object.values(postBody).join("', '")}')`),
+      reason => {
+        console.log('ERR AB')
+        console.log('`-- Desde AB', reason)
+        return Promise.reject(reason)
+      })
+    .then( ([rows]) => {
+        return Promise.resolve(rows.insertId)
+      },
+      reason => {
+        return Promise.reject(reason)
+      })
+    .then( id => getDbConnection().promise().query(`SELECT * FROM \`users\` WHERE \`id\` = ${id}`),
+      reason => {
+        return Promise.reject(reason)
+      })
+    .then( ([rows]) => {
+        const prettyResponse = JSON.stringify(rows[0], undefined, 2).concat(NEW_LINE)
+        response.statusCode = 201
+        response.setHeader('Content-Type', 'application/json')
+        response.end(prettyResponse)
+      },
+      reason => {
+        return Promise.reject(reason)
+      })
     .catch(error => {
-      (error.code !== DB_CONNECTION_REFUSED) ? db.end() : db.destroy()
       console.error(error)
       response.statusCode = 400
       response.setHeader('Content-Type', 'text/plain')
       response.end(STATUS_MESSAGE.BAD_REQUEST.concat(NEW_LINE))
     }))
   request.on('error', error => {
-    console.error(error.stack)
-  })
+      console.error(error.stack)
+    })
 }
 
 exports.putUsers = function (request, response) {
