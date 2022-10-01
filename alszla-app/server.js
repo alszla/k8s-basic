@@ -1,7 +1,7 @@
+const config = require('./config.js')
 const server = require('./controller.js')
-const HOSTNAME = '0.0.0.0'
-const PORT = 8080
+const { APP_PORT, APP_HOSTNAME } = config
 
-server.listen(PORT, HOSTNAME, () => {
-  console.info(`Server running at: http://${HOSTNAME}:${PORT}`)
+server.listen(APP_PORT, APP_HOSTNAME, () => {
+  console.info(`App Server running at: http://${APP_HOSTNAME}:${APP_PORT}`)
 })
