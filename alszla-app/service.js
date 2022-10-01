@@ -87,8 +87,6 @@ exports.postUsers = function (request, response) {
     })
     .then(postBody => getDbConnection().promise().query(`INSERT INTO \`users\` (\`${Object.keys(postBody).join('`, `')}\`) VALUES ('${Object.values(postBody).join("', '")}')`),
       reason => {
-        console.log('ERR AB')
-        console.log('`-- Desde AB', reason)
         return Promise.reject(reason)
       })
     .then( ([rows]) => {
@@ -125,41 +123,47 @@ exports.putUsers = function (request, response) {
   const { url: requestUrl } = request
   const parsedUrl = url.parse(requestUrl, true)
   const userId = parsedUrl.query.id
-  const db = getDbConnection()
   let body = ''
 
   request.on('data', chunk => {
-    body += chunk
-  })
+      body += chunk
+    })
   request.on('end', () => new Promise((resolve, reject) => {
-    try {
-      resolve(JSON.parse(body))
-    } catch (error) {
-      reject(error)
-    }
-  })
+      try {
+        resolve(JSON.parse(body))
+      } catch (error) {
+        reject(error)
+      }
+    })
     .then(putBody => {
-      queryString = `UPDATE \`users\` SET ${prepareStringsForUpdateQuery(putBody)} WHERE \`id\` = ${userId}`
-      return db.promise().query(queryString)
-    })
-    .then(() => db.promise().query(`SELECT * FROM \`users\` WHERE \`id\` = ${userId}`))
+        queryString = `UPDATE \`users\` SET ${prepareStringsForUpdateQuery(putBody)} WHERE \`id\` = ${userId}`
+        return getDbConnection().promise().query(queryString)
+      },
+      reason => {
+        return Promise.reject(reason)
+      })
+    .then(() => getDbConnection().promise().query(`SELECT * FROM \`users\` WHERE \`id\` = ${userId}`),
+      reason => {
+        return Promise.reject(reason)
+      })
     .then( ([rows]) => {
-      db.end()
-      const prettyResponse = JSON.stringify(rows[0], undefined, 2).concat(NEW_LINE)
-      response.statusCode = 200
-      response.setHeader('Content-Type', 'application/json')
-      response.end(prettyResponse)
-    })
+        const prettyResponse = JSON.stringify(rows[0], undefined, 2).concat(NEW_LINE)
+        response.statusCode = 200
+        response.setHeader('Content-Type', 'application/json')
+        response.end(prettyResponse)
+      },
+      reason => {
+        return Promise.reject(reason)
+      })
     .catch(error => {
-      (error.code !== DB_CONNECTION_REFUSED) ? db.end() : db.destroy()
-      console.error(error)
-      response.statusCode = 400
-      response.setHeader('Content-Type', 'text/plain')
-      response.end(STATUS_MESSAGE.BAD_REQUEST.concat(NEW_LINE))
-    }))
+        console.error(error)
+        response.statusCode = 400
+        response.setHeader('Content-Type', 'text/plain')
+        response.end(STATUS_MESSAGE.BAD_REQUEST.concat(NEW_LINE))
+      }))
   request.on('error', error => {
-    console.error(error.stack)
-  })
+      console.error(error.stack)
+    })
 }
 
 exports.deleteUsersUserId = function (request, response) {
@@ -170,17 +174,17 @@ exports.deleteUsersUserId = function (request, response) {
   const db = getDbConnection()
   db.promise().query(`DELETE FROM \`users\` WHERE \`id\` = ${userId}`)
     .then(() => {
-      db.end()
-      response.statusCode = 200
-      response.end(STATUS_MESSAGE.USER_DELETED.concat(NEW_LINE))
-    })
+        db.end()
+        response.statusCode = 200
+        response.end(STATUS_MESSAGE.USER_DELETED.concat(NEW_LINE))
+      })
     .catch(error => {
-      (error.code !== DB_CONNECTION_REFUSED) ? db.end() : db.destroy()
-      console.error(error)
-      response.statusCode = 400
-      response.setHeader('Content-Type', 'text/plain')
-      response.end(STATUS_MESSAGE.BAD_REQUEST.concat(NEW_LINE))
-    })
+        (error.code !== DB_CONNECTION_REFUSED) ? db.end() : db.destroy()
+        console.error(error)
+        response.statusCode = 400
+        response.setHeader('Content-Type', 'text/plain')
+        response.end(STATUS_MESSAGE.BAD_REQUEST.concat(NEW_LINE))
+      })
 }
 
 function prepareStringsForUpdateQuery(putBodyObject) {
