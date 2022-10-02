@@ -15,8 +15,7 @@ exports.invalidRequest = function(request, response) {
 }
 
 exports.getUsers = function (request, response) {
-  const db = getDbConnection()
-  db.promise().query('SELECT * FROM `users`')
+  getDbConnection().promise().query('SELECT * FROM `users`')
     .then( ([rows]) => {
       return new Promise((resolve, reject) => {
         try {
@@ -27,13 +26,14 @@ exports.getUsers = function (request, response) {
       })
     })
     .then(prettyResponse => {
-      db.end()
       response.statusCode = 200
       response.setHeader('Content-Type', 'application/json')
       response.end(prettyResponse)
-    })
+    },
+      reason => {
+        return Promise.reject(reason)
+      })
     .catch(error => {
-      (error.code !== DB_CONNECTION_REFUSED) ? db.end() : db.destroy()
       console.error(error)
       response.statusCode = 400
       response.setHeader('Content-Type', 'text/plain')
@@ -46,8 +46,7 @@ exports.getUsersUserId = function (request, response) {
   const parsedUrl = url.parse(requestUrl, true)
   const userId = parsedUrl.query.id
 
-  db = getDbConnection()
-  db.promise().query(`SELECT * FROM \`users\` WHERE \`id\` = ${userId}`)
+  getDbConnection().promise().query(`SELECT * FROM \`users\` WHERE \`id\` = ${userId}`)
     .then( ([rows]) => {
       return new Promise((resolve, reject) => {
         try {
@@ -58,13 +57,14 @@ exports.getUsersUserId = function (request, response) {
       })
     })
     .then(prettyResponse => {
-      db.end()
       response.statusCode = 200
       response.setHeader('Content-Type', 'application/json')
       response.end(prettyResponse)
-    })
+    },
+      reason => {
+        return Promise.reject(reason)
+      })
     .catch(error => {
-      (error.code !== DB_CONNECTION_REFUSED) ? db.end() : db.destroy()
       console.error(error)
       response.statusCode = 400
       response.setHeader('Content-Type', 'text/plain')
@@ -171,15 +171,12 @@ exports.deleteUsersUserId = function (request, response) {
   const parsedUrl = url.parse(requestUrl, true)
   const userId = parsedUrl.query.id
 
-  const db = getDbConnection()
-  db.promise().query(`DELETE FROM \`users\` WHERE \`id\` = ${userId}`)
+  getDbConnection().promise().query(`DELETE FROM \`users\` WHERE \`id\` = ${userId}`)
     .then(() => {
-        db.end()
         response.statusCode = 200
         response.end(STATUS_MESSAGE.USER_DELETED.concat(NEW_LINE))
       })
     .catch(error => {
-        (error.code !== DB_CONNECTION_REFUSED) ? db.end() : db.destroy()
         console.error(error)
         response.statusCode = 400
         response.setHeader('Content-Type', 'text/plain')
