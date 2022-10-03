@@ -8,5 +8,6 @@ data:
   MYSQL_DATABASE: "myappdb"
   db_schema: "myappdb"
   init.sql: |
+    CREATE DATABASE IF NOT EXISTS myappdb;
     USE myappdb;
     CREATE TABLE `users` (`id` int NOT NULL AUTO_INCREMENT, `Name` varchar(100) NOT NULL, `LastName` varchar(100) NOT NULL, `Role` varchar(100) NOT NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
