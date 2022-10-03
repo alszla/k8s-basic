@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-configmap
+  labels:
+    app: alszla-app
+data:
+  MYSQL_DATABASE: "myappdb"
+  db_schema: "myappdb"
+  init.sql: |
+    USE myappdb;
+    CREATE TABLE `users` (`id` int NOT NULL AUTO_INCREMENT, `Name` varchar(100) NOT NULL, `LastName` varchar(100) NOT NULL, `Role` varchar(100) NOT NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;

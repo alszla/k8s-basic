@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alszla-deploy
+  labels:
+    env: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alszla-app
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      name: alszla-app
+      labels:
+        app: alszla-app
+    spec:
+      containers:
+      - name: alszla-app
+        image: asanchezl/alszla-app:1.0.0
+        ports:
+        - containerPort: 9090
+        env:
+        - name: DB_SCHEMA
+          valueFrom: 
+            configMapKeyRef:
+              name: alszla-configmap
+              key: db_schema
+        - name: APP_HOSTNAME
+          valueFrom: 
+            secretKeyRef:
+              name: alszla-secret
+              key: APP_HOSTNAME
+        - name: APP_PORT
+          valueFrom: 
+            secretKeyRef:
+              name: alszla-secret
+              key: APP_PORT
+        - name: DB_HOST
+          valueFrom: 
+            secretKeyRef:
+              name: alszla-secret
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom: 
+            secretKeyRef:
+              name: alszla-secret
+              key: DB_PORT
+        - name: DB_USER
+          valueFrom: 
+            secretKeyRef:
+              name: alszla-secret
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: alszla-secret
+              key: DB_PASSWORD

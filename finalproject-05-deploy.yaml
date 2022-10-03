@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alszla-deploy
+  labels:
+    env: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alszla-app
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      name: mysql
+      labels:
+        app: alszla-app
+    spec:
+      containers:
+      - name: mysql
+        image: mysql
+        ports:
+        - containerPort: 3306
+          name: db-container
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: alszla-secret
+              key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+        - mountPath: "/var/lib/mysql"
+          subPath: "mysql"
+          name: mysql-data
+      volumes:
+      - name: mysql-initdb
+        configMap:
+          name: alszla-configmap
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-data-disk
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data-disk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi
